@@ -37,6 +37,7 @@ public class AuthController {
         User user = new User();
         user.setName(request.getName());
         user.setHealthId(request.getHealthId());
+        user.setPassword(request.getPassword());
         User saved = userRepository.save(user);
 
         if (request.getEmail() != null && !request.getEmail().isEmpty()) {
@@ -58,7 +59,7 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<User> login(@Valid @RequestBody LoginRequest request) {
-        Optional<User> user = userRepository.findByHealthId(request.getHealthId());
-        return user.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+        Optional<User> user = userRepository.findByHealthIdAndPassword(request.getHealthId(), request.getPassword());
+        return user.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.status(401).build());
     }
 }

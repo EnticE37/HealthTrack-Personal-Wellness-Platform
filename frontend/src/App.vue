@@ -4,52 +4,60 @@
     <p>示例前端，通过调用 Spring Boot 接口演示注册、预约、挑战与健康汇总功能。</p>
 
     <div class="section-grid">
-      <div class="card">
+      <div class="card" v-if="!user">
         <h2>注册 / 登录</h2>
         <form @submit.prevent="register">
           <input v-model="registerForm.name" placeholder="姓名" required />
           <input v-model="registerForm.healthId" placeholder="Health ID" required />
+          <input v-model="registerForm.password" type="password" placeholder="设置密码" required />
           <input v-model="registerForm.email" placeholder="邮箱（可选）" />
           <input v-model="registerForm.phone" placeholder="电话（可选）" />
           <button type="submit">注册</button>
         </form>
         <form style="margin-top:12px" @submit.prevent="login">
           <input v-model="loginForm.healthId" placeholder="使用 Health ID 登录" required />
+          <input v-model="loginForm.password" type="password" placeholder="输入密码" required />
           <button type="submit">登录</button>
         </form>
-        <div v-if="user">
-          <p>当前用户：{{ user.name }} (ID: {{ user.id }})</p>
-        </div>
+        <p class="hint">登录成功后才可进入主界面并使用所有功能。</p>
       </div>
 
+      <div class="card" v-else>
+        <h2>已登录</h2>
+        <p>当前用户：{{ user.name }} (ID: {{ user.id }})</p>
+        <button @click="signOut">退出登录</button>
+      </div>
+    </div>
+
+    <div v-if="user" class="section-grid">
       <div class="card">
         <h2>账号信息与联系方式</h2>
         <form @submit.prevent="updateProfile">
           <input v-model="updateForm.name" placeholder="更新姓名" />
           <input v-model="updateForm.primaryProvider" placeholder="主治医生执业号" />
-          <button type="submit" :disabled="!user">保存</button>
+          <button type="submit">保存</button>
         </form>
         <form style="margin-top:10px" @submit.prevent="addEmail">
           <input v-model="contact.email" placeholder="新增邮箱" />
-          <button type="submit" :disabled="!user">添加邮箱</button>
+          <button type="submit">添加邮箱</button>
         </form>
         <form style="margin-top:10px" @submit.prevent="addPhone">
           <input v-model="contact.phone" placeholder="新增电话" />
-          <button type="submit" :disabled="!user">添加电话</button>
+          <button type="submit">添加电话</button>
         </form>
         <form style="margin-top:10px" @submit.prevent="linkProvider">
           <input v-model="provider.licenseNumber" placeholder="医生执业号" />
           <input v-model="provider.name" placeholder="医生姓名" />
-          <button type="submit" :disabled="!user">关联医生</button>
+          <button type="submit">关联医生</button>
         </form>
-        <button style="margin-top:10px" @click="loadProviders" :disabled="!user">刷新关联列表</button>
+        <button style="margin-top:10px" @click="loadProviders">刷新关联列表</button>
         <ul class="list">
           <li v-for="p in providers" :key="p.id">{{ p.provider?.name }} - {{ p.provider?.licenseNumber }}</li>
         </ul>
       </div>
     </div>
 
-    <div class="section-grid">
+    <div v-if="user" class="section-grid">
       <div class="card">
         <h2>预约</h2>
         <form @submit.prevent="bookAppointment">
@@ -91,7 +99,7 @@
       </div>
     </div>
 
-    <div class="section-grid">
+    <div v-if="user" class="section-grid">
       <div class="card">
         <h2>月度健康总结</h2>
         <form @submit.prevent="addMetric">
@@ -135,8 +143,8 @@ import { reactive, ref } from 'vue'
 const api = (path, options = {}) => fetch(path, { headers: { 'Content-Type': 'application/json' }, ...options }).then(r => r.json())
 
 const user = ref(null)
-const registerForm = reactive({ name: '', healthId: '', email: '', phone: '' })
-const loginForm = reactive({ healthId: '' })
+const registerForm = reactive({ name: '', healthId: '', password: '', email: '', phone: '' })
+const loginForm = reactive({ healthId: '', password: '' })
 const updateForm = reactive({ name: '', primaryProvider: '' })
 const contact = reactive({ email: '', phone: '' })
 const provider = reactive({ licenseNumber: '', name: '' })
@@ -158,7 +166,20 @@ const register = async () => {
 
 const login = async () => {
   const res = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(loginForm) })
-  if (res.ok) user.value = await res.json()
+  if (res.ok) {
+    user.value = await res.json()
+  } else {
+    alert('登录失败，请检查 Health ID 和密码是否正确')
+  }
+}
+
+const signOut = () => {
+  user.value = null
+  appointments.value = []
+  challenges.value = []
+  metrics.value = []
+  providers.value = []
+  searchResults.value = []
 }
 
 const updateProfile = async () => {

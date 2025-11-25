@@ -7,6 +7,8 @@ public class RegisterRequest {
     private String name;
     @NotBlank
     private String healthId;
+    @NotBlank
+    private String password;
     private String email;
     private String phone;
 
@@ -24,6 +26,14 @@ public class RegisterRequest {
 
     public void setHealthId(String healthId) {
         this.healthId = healthId;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public String getEmail() {

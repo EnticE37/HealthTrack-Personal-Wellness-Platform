@@ -18,6 +18,9 @@ public class User {
     @Column(name = "health_id", nullable = false, unique = true)
     private String healthId;
 
+    @Column(name = "password", nullable = false)
+    private String password;
+
     @ManyToOne
     @JoinColumn(name = "primary_provider_id")
     private Provider primaryProvider;
@@ -56,6 +59,14 @@ public class User {
 
     public void setHealthId(String healthId) {
         this.healthId = healthId;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public Provider getPrimaryProvider() {
